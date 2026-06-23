@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>星迹可观测平台 - Element UI 版 (完整版)</title>
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <style>
+        /* 基础与变量覆盖 */
+        :root {
+            --bg-gray: #f0f2f5;
+        }
+        body {
+            margin: 0;
+            background-color: var(--bg-gray);
+            font-family: "Helvetica Neue", Helvetica, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "微软雅黑", Arial, sans-serif;
+        }
+        [v-cloak] { display: none; }
+
+        /* 顶部导航自定义样式 */
+        .app-header {
+            background-color: #fff;
+            height: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            box-shadow: 0 1px 4px rgba(0,21,41,.08);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .header-left, .header-right { display: flex; align-items: center; gap: 24px; }
+        .logo-box { display: flex; align-items: center; gap: 8px; font-size: 18px; font-weight: bold; color: #1677ff; }
+        .el-dropdown-link { cursor: pointer; color: #333; display: flex; align-items: center; gap: 6px; }
+
+        /* 主体布局 */
+        .main-container {
+            max-width: 1440px;
+            margin: 24px auto;
+            display: flex;
+            gap: 24px;
+            padding: 0 24px;
+        }
+        .content-left { flex: 1; min-width: 0; }
+        .content-right { width: 360px; flex-shrink: 0; }
+
+        /* ================= 修改：Banner 区域使用背景图 ================= */
+        .banner-wrap {
+            background: url('banner.png') no-repeat right center;
+            background-size: cover;
+            border-radius: 8px 8px 0 0;
+            padding: 48px 40px;
+            position: relative;
+            overflow: hidden;
+        }
+        .banner-wrap h1 { margin: 0 0 16px 0; color: #1677ff; font-size: 36px; }
+        .banner-wrap h1 span { color: #333; }
+        .banner-wrap p { color: #666; line-height: 1.6; max-width: 450px; margin: 0; }
+
+        /* 选项卡内容区 */
+        .tabs-wrap { background: #fff; padding: 0 24px 24px; border-radius: 0 0 8px 8px; }
+        .el-tabs__nav-wrap::after { height: 1px; background-color: #f0f0f0; }
+        .el-tabs__item { font-size: 15px; height: 50px; line-height: 50px; }
+
+        /* 操作卡片自定义 */
+        .action-card { border-radius: 8px; border: 1px solid transparent; background: #fafafa; transition: all 0.3s; cursor: pointer; }
+        .action-card:hover { background: #fff; border-color: #1677ff; box-shadow: 0 4px 12px rgba(22,119,255,0.1); }
+        .action-card-content { display: flex; gap: 16px; }
+        .action-icon { width: 40px; height: 40px; border-radius: 50%; background: #e6f4ff; color: #1677ff; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+        .action-text h4 { margin: 0 0 8px 0; font-size: 16px; color: #333; display: flex; align-items: center; justify-content: space-between; }
+        .action-text h4 i { color: #1677ff; font-weight: bold; }
+        .action-text p { margin: 0; font-size: 12px; color: #999; line-height: 1.5; }
+
+        /* ================= 修改：服务入口模块样式 ================= */
+        .service-entrance-wrap { background: #fff; border-radius: 8px; padding: 24px; margin-top: 16px; }
+        .se-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .se-title { font-size: 16px; font-weight: bold; display: flex; align-items: center; gap: 8px; color: #333; }
+        .se-banners { display: flex; gap: 16px; margin-bottom: 24px; }
+        
+        /* 服务入口卡片统一背景设置 */
+        .se-banner-item { 
+            flex: 1; 
+            height: 80px; 
+            border-radius: 6px; 
+            padding: 0 20px; 
+            display: flex; 
+            align-items: center; 
+            cursor: pointer; 
+            transition: transform 0.3s, box-shadow 0.3s;
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: cover;
+        }
+        .se-banner-item:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .se-banner-item.blue { background-image: url('环境配置.jpg'); }
+        .se-banner-item.purple { background-image: url('业务观测.jpg'); }
+        .se-banner-item.green { background-image: url('告警管理.jpg'); }
+        
+        .se-banner-text { font-size: 16px; font-weight: bold; color: #333; }
+
+        /* 快捷功能区 */
+        .shortcut-title { font-size: 13px; color: #999; margin-bottom: 12px; }
+        .shortcut-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
+        .shortcut-item { background: #f5f7fa; border-radius: 4px; height: 40px; display: flex; align-items: center; justify-content: center; font-size: 13px; color: #333; cursor: pointer; position: relative; transition: all 0.3s; }
+        .shortcut-item:hover { background: #e6f4ff; color: #1677ff; }
+        .shortcut-item.add-btn { background: #fff; border: 1px dashed #d9d9d9; color: #666; }
+        .shortcut-item.add-btn:hover { border-color: #1677ff; color: #1677ff; }
+        .shortcut-item .remove-icon { display: none; position: absolute; right: 8px; font-size: 14px; color: #999; }
+        .shortcut-item:hover .remove-icon { display: block; }
+
+        /* 性能观测 表格模块样式 */
+        .perf-wrap { background: #fff; border-radius: 8px; padding: 24px; margin-top: 16px; }
+        .perf-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .perf-title-row { display: flex; align-items: center; gap: 16px; }
+        .perf-title-row .title { font-size: 18px; font-weight: bold; color: #333; }
+        .rank-tag { display: flex; align-items: center; font-size: 12px; border-radius: 4px; overflow: hidden; }
+        .rank-tag .top { background-color: #3b82f6; color: #fff; font-weight: bold; font-style: italic; padding: 2px 8px; }
+        .rank-tag .text { background-color: #eff6ff; color: #3b82f6; padding: 2px 10px; }
+        .perf-actions { display: flex; align-items: center; gap: 16px; }
+        .perf-wrap .el-table th { background-color: #fafafa !important; color: #666; font-weight: 500; }
+        .perf-wrap .el-table td { padding: 12px 0; }
+        .trend-icon { font-size: 14px; color: #ccc; margin-left: 4px; }
+        .text-danger { color: #f5222d !important; }
+        .text-primary { color: #1677ff !important; }
+
+        /* 告警趋势与图表模块样式 */
+        .charts-wrap { background: #fff; border-radius: 8px; padding: 24px; margin-top: 16px; }
+        .charts-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .charts-header .title { font-size: 18px; font-weight: bold; color: #333; }
+        .charts-actions { display: flex; align-items: center; gap: 16px; }
+        .sub-charts-row { display: flex; gap: 16px; margin-top: 24px; }
+        .sub-chart-box { flex: 1; background: #fafafa; border-radius: 8px; padding: 20px; position: relative; display: flex; flex-direction: column; }
+        .sub-chart-title { font-size: 16px; font-weight: bold; color: #333; margin-bottom: 16px; }
+        .chart-container { width: 100%; height: 260px; }
+        .pie-legend-custom { display: flex; justify-content: center; gap: 24px; margin-top: auto; font-size: 13px; color: #333; }
+        .pie-legend-item { display: flex; align-items: center; gap: 6px; }
+        .pie-legend-dot { width: 10px; height: 10px; border-radius: 50%; border: 2px solid; background: #fff;}
+        .dot-red { border-color: #ff4d4f; }
+        .dot-yellow { border-color: #faad14; }
+        .dot-blue { border-color: #1677ff; }
+        .task-footer-bar { background-color: #e6f4ff; border-radius: 4px; padding: 12px; display: flex; justify-content: space-around; color: #333; font-size: 13px; margin-top: auto; }
+
+        /* 右侧边栏 - 账户卡片 */
+        .account-card .el-card__header { padding: 16px 20px; border-bottom: none; }
+        .account-header { display: flex; justify-content: space-between; align-items: center; }
+        .account-header span { font-weight: bold; font-size: 16px; }
+        
+        /* ================= 修改：个人信息卡片应用用户背景图 ================= */
+        .user-info-box { 
+            background: url('用户背景.png') no-repeat right center; 
+            background-size: cover;
+            border-radius: 8px; 
+            padding: 20px; 
+            display: flex; 
+            align-items: center; 
+            gap: 16px; 
+            position: relative; 
+            overflow: hidden; 
+            margin-bottom: 24px; 
+        }
+        .role-tag { position: absolute; top: 0; right: 0; border-radius: 0 0 0 8px; }
+        .user-text h2 { margin: 0 0 4px 0; font-size: 18px; color: #333; }
+        .user-text p { margin: 0; font-size: 13px; color: #666; }
+        .stat-box { display: flex; justify-content: space-between; padding: 0 10px; margin-bottom: 24px; }
+        .stat-label { font-size: 12px; color: #999; margin-bottom: 8px; cursor: pointer; }
+        .stat-value { font-size: 24px; font-weight: bold; color: #333; }
+        .btn-group { display: flex; gap: 12px; }
+        .btn-group .el-button { flex: 1; padding: 10px 0; }
+
+        /* 告警模块样式 */
+        .alarm-card { margin-top: 16px; border-radius: 8px; border: none; }
+        .alarm-card .el-card__body { padding: 24px 20px; }
+        .alarm-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .alarm-header .title { font-size: 16px; font-weight: bold; color: #333; }
+        .date-toggle { display: flex; background-color: #f5f7fa; border-radius: 4px; padding: 2px; font-size: 13px; }
+        .date-toggle span { padding: 4px 12px; cursor: pointer; color: #666; border-radius: 2px; transition: all 0.3s; }
+        .date-toggle span.active { background-color: #fff; color: #1677ff; box-shadow: 0 1px 3px rgba(0,0,0,0.05); font-weight: 500; }
+        
+        /* ================= 修改：告警横幅应用背景图 ================= */
+        .alarm-banner { 
+            background: url('告警.jpg') no-repeat left center; 
+            background-size: cover;
+            border-radius: 6px; 
+            padding: 16px 16px 16px 90px; 
+            display: flex; 
+            align-items: center; 
+            margin-bottom: 20px; 
+            min-height: 80px;
+            box-sizing: border-box;
+        }
+        .alarm-banner-text .b-title { font-weight: bold; font-size: 15px; color: #333; margin-bottom: 4px; }
+        .alarm-banner-text .b-desc { font-size: 12px; color: #666; }
+        
+        .status-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+        .status-card { background: linear-gradient(180deg, #f0f5ff 0%, #e6efff 100%); border-radius: 6px; padding: 16px 12px; cursor: pointer; transition: all 0.3s; position: relative; overflow: hidden; }
+        .status-card::before { content: ''; position: absolute; right: -20px; bottom: -20px; width: 70px; height: 70px; background: radial-gradient(circle, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0) 70%); border-radius: 50%; pointer-events: none; }
+        .status-card:hover { box-shadow: 0 4px 12px rgba(22,119,255,0.15); transform: translateY(-2px); }
+        .status-name { font-size: 13px; color: #666; margin-bottom: 12px; display: flex; align-items: center; }
+        .status-name i { margin-left: 4px; font-size: 12px; color: #999; }
+        .status-num { font-size: 26px; font-weight: bold; color: #333; margin-bottom: 16px; line-height: 1; }
+        .status-dots { display: flex; gap: 10px; font-size: 12px; color: #666; }
+        .status-dots .dot-item { display: flex; align-items: center; gap: 4px; }
+        .dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
+        .dot.red { background-color: #ff4d4f; }
+        .dot.yellow { background-color: #faad14; }
+        .dot.blue { background-color: #1677ff; }
+        .dot.orange { background-color: #fa8c16; }
+        .dot.gray { background-color: #bfbfbf; }
+        .team-subtitle { font-size: 15px; font-weight: bold; color: #333; margin: 24px 0 16px; }
+        .team-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+        .team-card { border: 1px solid #ebeef5; border-radius: 6px; padding: 12px; cursor: pointer; transition: all 0.3s; background: #fff; }
+        .team-card.active, .team-card:hover { background-color: #f8fbff; border-color: #cce4ff; }
+        .team-name { font-size: 13px; color: #666; margin-bottom: 8px; display: flex; align-items: center; }
+        .team-name .dot { margin-right: 6px; }
+        .team-name .fr { margin-left: auto; color: #ccc; font-size: 12px; }
+        .team-num { font-size: 20px; font-weight: bold; color: #333; padding-left: 12px; }
+
+        /* 网络可用性探测 */
+        .network-card { margin-top: 16px; border-radius: 8px; border: none; background: linear-gradient(135deg, #f5faff 0%, #e6f4ff 100%); position: relative; overflow: hidden; }
+        .network-card .el-card__body { padding: 24px 20px; }
+        .network-title { font-size: 16px; font-weight: bold; color: #333; margin-bottom: 16px; display: flex; align-items: center; gap: 6px; }
+        .network-title i { color: #999; font-weight: normal; font-size: 14px; cursor: pointer; }
+        .network-input-box { display: flex; gap: 12px; }
+        .network-input-box .el-input { flex: 1; }
+
+        /* 最新文档 */
+        .docs-card { margin-top: 16px; border-radius: 8px; border: none; }
+        .docs-card .el-card__body { padding: 24px 20px; }
+        .docs-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+        .docs-header .title { font-size: 16px; font-weight: bold; color: #333; }
+        .docs-header .more { font-size: 13px; color: #666; cursor: pointer; display: flex; align-items: center; }
+        .docs-header .more:hover { color: #1677ff; }
+
+        .docs-featured-title { font-size: 15px; font-weight: bold; color: #333; margin: 0 0 8px 0; }
+        .docs-featured-desc { font-size: 12px; color: #999; line-height: 1.5; margin: 0; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+
+        .docs-list { margin-top: 16px; display: flex; flex-direction: column; gap: 14px; }
+        .doc-item { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+        .doc-item:hover .doc-text { color: #1677ff; }
+        .doc-tag { border: 1px solid #dcdfe6; border-radius: 4px; padding: 2px 6px; font-size: 12px; color: #666; background: #fff; flex-shrink: 0; }
+        .doc-text { font-size: 13px; color: #333; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; transition: color 0.3s; }
+    </style>
+</head>
+<body>
+
+<div id="app" v-cloak>
+    <header class="app-header">
+        <div class="header-left">
+            <div class="logo-box">
+                <i class="el-icon-eleme" style="font-size: 24px;"></i>
+                <span>星迹可观测</span>
+            </div>
+            <span style="font-weight: 500;">工作台</span>
+            <el-dropdown trigger="click">
+                <span class="el-dropdown-link" style="border: 1px solid #dcdfe6; padding: 4px 12px; border-radius: 4px; background: #fafafa;">
+                    工作空间 Default <i class="el-icon-arrow-down el-icon--right"></i>
+                </span>
+                <el-dropdown-menu slot="dropdown">
+                    <el-dropdown-item>Default</el-dropdown-item>
+                    <el-dropdown-item>Production</el-dropdown-item>
+                </el-dropdown-menu>
+            </el-dropdown>
+        </div>
+        <div class="header-right">
+            <el-link :underline="false">文档中心</el-link>
+            <el-dropdown trigger="click">
+                <span class="el-dropdown-link">
+                    <el-avatar size="small" style="background: #1677ff;">吴</el-avatar>
+                    吴瑞 <i class="el-icon-arrow-down el-icon--right"></i>
+                </span>
+                <el-dropdown-menu slot="dropdown">
+                    <el-dropdown-item>个人设置</el-dropdown-item>
+                    <el-dropdown-item divided>退出登录</el-dropdown-item>
+                </el-dropdown-menu>
+            </el-dropdown>
+        </div>
+    </header>
+
+    <div class="main-container">
+        <div class="content-left">
+            <div class="banner-wrap">
+                <h1>星迹<span>可观测平台</span></h1>
+                <p>全领域场景的可观测产品，旨在满足基础设施、应用和业务监测需求。提供故障预防、发现与定位能力，优化资源使用和用户体验，助力企业数字化转型。</p>
+            </div>
+
+            <div class="tabs-wrap">
+                <el-tabs v-model="activeTab">
+                    <el-tab-pane label="环境配置" name="env">
+                        <el-row :gutter="16">
+                            <el-col :span="8">
+                                <el-card shadow="never" class="action-card" :body-style="{ padding: '20px' }">
+                                    <div class="action-card-content">
+                                        <div class="action-icon"><i class="el-icon-coin"></i></div>
+                                        <div class="action-text">
+                                            <h4>配置安装盘 <i class="el-icon-right"></i></h4>
+                                            <p>可视化配置安装环境配置，支持Agent、Proxy管理</p>
+                                        </div>
+                                    </div>
+                                </el-card>
+                            </el-col>
+                            <el-col :span="8">
+                                <el-card shadow="never" class="action-card" :body-style="{ padding: '20px' }">
+                                    <div class="action-card-content">
+                                        <div class="action-icon"><i class="el-icon-download"></i></div>
+                                        <div class="action-text">
+                                            <h4>Agent采集安装</h4>
+                                            <p>安装Agent并为接入数据做排查准备</p>
+                                        </div>
+                                    </div>
+                                </el-card>
+                            </el-col>
+                            <el-col :span="8">
+                                <el-card shadow="never" class="action-card" :body-style="{ padding: '20px' }">
+                                    <div class="action-card-content">
+                                        <div class="action-icon"><i class="el-icon-document"></i></div>
+                                        <div class="action-text">
+                                            <h4>查看任务执行历史</h4>
+                                            <p>通过执行状态查看任务的正常与异常处理状态</p>
+                                        </div>
+                                    </div>
+                                </el-card>
+                            </el-col>
+                        </el-row>
+                    </el-tab-pane>
+                    <el-tab-pane label="数据接入" name="data">内容...</el-tab-pane>
+                    <el-tab-pane label="数据探索" name="explore">内容...</el-tab-pane>
+                </el-tabs>
+            </div>
+
+            <div class="service-entrance-wrap">
+                <div class="se-header">
+                    <div class="se-title">服务入口 <el-tooltip content="了解服务入口配置" placement="top"><i class="el-icon-question"></i></el-tooltip></div>
+                    <i class="el-icon-more" style="color: #999; cursor: pointer; transform: rotate(90deg);"></i>
+                </div>
+                <div class="se-banners">
+                    <div class="se-banner-item blue">
+                        <span class="se-banner-text">环境配置</span>
+                    </div>
+                    <div class="se-banner-item purple">
+                        <span class="se-banner-text">业务观测</span>
+                    </div>
+                    <div class="se-banner-item green">
+                        <span class="se-banner-text">告警管理 <i class="el-icon-right" style="margin-left:4px; font-weight:bold; color: #08979c;"></i></span>
+                    </div>
+                </div>
+                <div class="shortcut-section">
+                    <div class="shortcut-title">自定义快捷功能</div>
+                    <div class="shortcut-grid">
+                        <div class="shortcut-item">Agent环境管理 <i class="el-icon-remove-outline remove-icon"></i></div>
+                        <div class="shortcut-item">基础设施检测</div>
+                        <div class="shortcut-item">仪表盘</div>
+                        <div class="shortcut-item">日志分析</div>
+                        <div class="shortcut-item add-btn"><i class="el-icon-plus"></i> 添加</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="perf-wrap">
+                <div class="perf-header">
+                    <div class="perf-title-row">
+                        <span class="title">应用性能观测</span>
+                        <div class="rank-tag">
+                            <span class="top">TOP 10</span>
+                            <span class="text">错误数排行榜</span>
+                        </div>
+                    </div>
+                    <div class="perf-actions">
+                        <el-date-picker
+                            v-model="perfDateRange"
+                            type="daterange"
+                            range-separator="至"
+                            start-placeholder="开始日期"
+                            end-placeholder="结束日期"
+                            size="small"
+                            style="width: 250px">
+                        </el-date-picker>
+                        <el-button type="text" style="color: #999; padding: 0;">查看更多 <i class="el-icon-arrow-right"></i></el-button>
+                    </div>
+                </div>
+                <el-table :data="perfTableData" style="width: 100%">
+                    <el-table-column prop="appName" label="应用名称" min-width="150">
+                        <template slot-scope="scope">
+                            <el-link :class="{'text-primary': scope.$index === 1}" :underline="false">{{ scope.row.appName }}</el-link>
+                        </template>
+                    </el-table-column>
+                    <el-table-column prop="logCount" label="错误日志数" sortable min-width="120">
+                        <template slot-scope="scope">{{ scope.row.logCount }} <i class="el-icon-top-right trend-icon"></i></template>
+                    </el-table-column>
+                    <el-table-column prop="errCount" label="错误数" sortable min-width="100">
+                        <template slot-scope="scope">
+                            <span :class="{'text-primary': scope.$index === 0, 'text-danger': scope.$index === 5}">{{ scope.row.errCount }}</span>
+                            <i class="el-icon-top-right trend-icon"></i>
+                        </template>
+                    </el-table-column>
+                    <el-table-column prop="reqVolume" label="请求量(次/分)" sortable min-width="130">
+                        <template slot-scope="scope">{{ scope.row.reqVolume.toFixed(2) }} <i class="el-icon-top-right trend-icon"></i></template>
+                    </el-table-column>
+                    <el-table-column prop="successRate" label="成功率(%)" sortable min-width="120">
+                        <template slot-scope="scope">
+                            <span :class="{'text-danger': scope.row.successRate < 100}">{{ scope.row.successRate.toFixed(2) }}</span>
+                            <i class="el-icon-top-right trend-icon"></i>
+                        </template>
+                    </el-table-column>
+                    <el-table-column prop="avgTime" label="平均耗时(ms)" sortable min-width="130">
+                        <template slot-scope="scope">{{ scope.row.avgTime.toFixed(2) }} <i class="el-icon-top-right trend-icon"></i></template>
+                    </el-table-column>
+                    <el-table-column prop="health" label="健康度" sortable min-width="100">
+                        <template slot-scope="scope">
+                            <span :class="{'text-danger': scope.row.health < 100}">{{ scope.row.health.toFixed(2) }}</span>
+                            <i class="el-icon-top-right trend-icon"></i>
+                        </template>
+                    </el-table-column>
+                </el-table>
+            </div>
+
+            <div class="charts-wrap">
+                <div class="charts-header">
+                    <div class="title">告警总量趋势</div>
+                    <div class="charts-actions">
+                        <el-date-picker
+                            v-model="alarmDateRange"
+                            type="daterange"
+                            range-separator="至"
+                            start-placeholder="开始日期"
+                            end-placeholder="结束日期"
+                            size="small"
+                            style="width: 250px">
+                        </el-date-picker>
+                        <i class="el-icon-more" style="color: #999; cursor: pointer; transform: rotate(90deg);"></i>
+                    </div>
+                </div>
+                
+                <div id="lineChart" style="height: 300px; width: 100%;"></div>
+
+                <div class="sub-charts-row">
+                    <div class="sub-chart-box">
+                        <div class="sub-chart-title">告警级别占比</div>
+                        <div id="pieChart1" class="chart-container"></div>
+                        <div class="pie-legend-custom">
+                            <div class="pie-legend-item"><div class="pie-legend-dot dot-red"></div> 严重: 40</div>
+                            <div class="pie-legend-item"><div class="pie-legend-dot dot-yellow"></div> 告警: 60</div>
+                            <div class="pie-legend-item"><div class="pie-legend-dot dot-blue"></div> 信息: 135</div>
+                        </div>
+                    </div>
+
+                    <div class="sub-chart-box">
+                        <div class="sub-chart-title">任务分析</div>
+                        <div id="pieChart2" class="chart-container" style="height: 220px;"></div>
+                        <div class="task-footer-bar">
+                            <span>平均响应时长MTTA: 1min15s</span>
+                            <span>平均处理时长MTTR: 1min</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="content-right">
+            <el-card class="account-card" shadow="never">
+                <div slot="header" class="account-header">
+                    <span>账号与权限</span>
+                    <el-link type="primary" :underline="false" style="font-size: 13px;">查看更多 <i class="el-icon-arrow-right"></i></el-link>
+                </div>
+                <div class="user-info-box">
+                    <el-tag size="small" effect="dark" class="role-tag">空间管理员</el-tag>
+                    <el-avatar :size="48" src="https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png"></el-avatar>
+                    <div class="user-text">
+                        <h2>吴瑞</h2>
+                        <p>账号 ID：admin</p>
+                    </div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-item"><div class="stat-label">用户 &gt;</div><div class="stat-value">0</div></div>
+                    <div class="stat-item"><div class="stat-label">角色 &gt;</div><div class="stat-value">0</div></div>
+                    <div class="stat-item"><div class="stat-label">工作空间 &gt;</div><div class="stat-value">3</div></div>
+                </div>
+                <div class="btn-group">
+                    <el-button icon="el-icon-plus" plain>新增用户</el-button>
+                    <el-button plain>新增角色</el-button>
+                    <el-button plain>创建空间</el-button>
+                </div>
+            </el-card>
+
+            <el-card class="alarm-card" shadow="never">
+                <div class="alarm-header">
+                    <div class="title">我的告警</div>
+                    <div class="date-toggle">
+                        <span class="active">近7日</span>
+                        <span>近30日</span>
+                    </div>
+                </div>
+
+                <div class="alarm-banner">
+                    <div class="alarm-banner-text">
+                        <div class="b-title">告警事件</div>
+                        <div class="b-desc">当前有告警中的任务，请您及时处理！</div>
+                    </div>
+                </div>
+
+                <div class="status-grid">
+                    <div class="status-card">
+                        <div class="status-name">待处理 <i class="el-icon-arrow-right"></i></div>
+                        <div class="status-num">3</div>
+                        <div class="status-dots">
+                            <span class="dot-item"><i class="dot red"></i> 1</span>
+                            <span class="dot-item"><i class="dot yellow"></i> 1</span>
+                            <span class="dot-item"><i class="dot blue"></i> 1</span>
+                        </div>
+                    </div>
+                    <div class="status-card">
+                        <div class="status-name">处理中 <i class="el-icon-arrow-right"></i></div>
+                        <div class="status-num">20</div>
+                        <div class="status-dots">
+                            <span class="dot-item"><i class="dot red"></i> 10</span>
+                            <span class="dot-item"><i class="dot yellow"></i> 5</span>
+                            <span class="dot-item"><i class="dot blue"></i> 5</span>
+                        </div>
+                    </div>
+                    <div class="status-card">
+                        <div class="status-name">已关闭 <i class="el-icon-arrow-right"></i></div>
+                        <div class="status-num">6</div>
+                        <div class="status-dots">
+                            <span class="dot-item"><i class="dot red"></i> 1</span>
+                            <span class="dot-item"><i class="dot yellow"></i> 2</span>
+                            <span class="dot-item"><i class="dot blue"></i> 3</span>
+                        </div>
+                    </div>
+                </div>
+
+                <el-divider style="margin: 24px 0;"></el-divider>
+
+                <div class="team-subtitle">团队所有告警</div>
+                <div class="team-grid">
+                    <div class="team-card active">
+                        <div class="team-name">
+                            <i class="dot orange"></i> 待处理
+                            <i class="el-icon-arrow-right fr"></i>
+                        </div>
+                        <div class="team-num">12</div>
+                    </div>
+                    <div class="team-card">
+                        <div class="team-name">
+                            <i class="dot blue"></i> 处理中
+                        </div>
+                        <div class="team-num">22</div>
+                    </div>
+                    <div class="team-card">
+                        <div class="team-name">
+                            <i class="dot gray"></i> 已关闭
+                        </div>
+                        <div class="team-num">34</div>
+                    </div>
+                </div>
+            </el-card>
+
+            <el-card class="network-card" shadow="never">
+                <div class="network-title">
+                    网络可用性探测 
+                    <el-tooltip content="了解探测规则" placement="top">
+                        <i class="el-icon-question"></i>
+                    </el-tooltip>
+                </div>
+                <div class="network-input-box">
+                    <el-input placeholder="请输入URL，快速检测网络可用性" size="medium"></el-input>
+                    <el-button type="primary" size="medium">一键检测</el-button>
+                </div>
+            </el-card>
+
+            <el-card class="docs-card" shadow="never">
+                <div class="docs-header">
+                    <div class="title">最新文档</div>
+                    <div class="more">查看更多 <i class="el-icon-arrow-right"></i></div>
+                </div>
+                
+                <img src="未标题-6.png" alt="最新文档" style="width: 100%; border-radius: 6px; margin-bottom: 16px; display: block; object-fit: cover;">
+                
+                <h4 class="docs-featured-title">新增的文档大标题星迹应用场景</h4>
+                <p class="docs-featured-desc">最新文档正文内容描述，新可观测平台场景介绍是一款云原生全功能的...</p>
+                
+                <el-divider style="margin: 16px 0;"></el-divider>
+                
+                <div class="docs-list">
+                    <div class="doc-item">
+                        <span class="doc-tag">产品概述</span>
+                        <span class="doc-text">新可观测平台场景介绍是一款云原生全功能的可...</span>
+                    </div>
+                    <div class="doc-item">
+                        <span class="doc-tag">产品概述</span>
+                        <span class="doc-text">如何高效使用仪表盘</span>
+                    </div>
+                    <div class="doc-item">
+                        <span class="doc-tag">产品概述</span>
+                        <span class="doc-text">告警策略配置</span>
+                    </div>
+                    <div class="doc-item">
+                        <span class="doc-tag">快速入门</span>
+                        <span class="doc-text">如何联系产品演示DEMO</span>
+                    </div>
+                    <div class="doc-item">
+                        <span class="doc-tag">操作指南</span>
+                        <span class="doc-text">讯飞可观测业务组概念</span>
+                    </div>
+                    <div class="doc-item">
+                        <span class="doc-tag">操作指南</span>
+                        <span class="doc-text">日志分析操作文档</span>
+                    </div>
+                </div>
+            </el-card>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/vue@2.7.14/dist/vue.js"></script>
+<script src="https://unpkg.com/element-ui/lib/index.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+
+<script>
+    new Vue({
+        el: '#app',
+        data() {
+            return {
+                activeTab: 'env',
+                perfDateRange: ['2024-03-15', '2024-04-20'],
+                alarmDateRange: ['2024-03-15', '2024-04-20'],
+                perfTableData: [
+                    { appName: 'front tend', logCount: 3, errCount: 3, reqVolume: 9.81, successRate: 90.00, avgTime: 4.23, health: 0.00 },
+                    { appName: 'front tendewkejwkjewew', logCount: 3, errCount: 3, reqVolume: 3.95, successRate: 100.00, avgTime: 4.23, health: 100.00 },
+                    { appName: 'featureflagservice', logCount: 3, errCount: 3, reqVolume: 1.25, successRate: 100.00, avgTime: 4.23, health: 100.00 },
+                    { appName: 'adservice', logCount: 12, errCount: 12, reqVolume: 0.50, successRate: 100.00, avgTime: 4.23, health: 100.00 },
+                    { appName: 'currencyservice', logCount: 123, errCount: 123, reqVolume: 0.43, successRate: 100.00, avgTime: 4.23, health: 100.00 },
+                    { appName: 'featureflagservice', logCount: 12, errCount: 12, reqVolume: 1.25, successRate: 100.00, avgTime: 4.23, health: 100.00 }
+                ]
+            };
+        },
+        mounted() {
+            this.$nextTick(() => {
+                this.initLineChart();
+                this.initPieChart1();
+                this.initPieChart2();
+            });
+        },
+        methods: {
+            initLineChart() {
+                const chart = echarts.init(document.getElementById('lineChart'));
+                const option = {
+                    tooltip: {
+                        trigger: 'axis',
+                        backgroundColor: '#fff',
+                        padding: 16,
+                        textStyle: { color: '#333' },
+                        extraCssText: 'box-shadow: 0 2px 12px 0 rgba(0,0,0,.1); border-radius: 8px;',
+                        formatter: function(params) {
+                            return `
+                                <div style="font-weight:bold; margin-bottom:12px;">${params[0].name}</div>
+                                <div style="display:flex; justify-content:space-between; margin-bottom:8px; width:120px;">
+                                    <span>告警总数</span> <span style="font-weight:bold;">30</span>
+                                </div>
+                                <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                                    <span style="color:#666;"><i style="display:inline-block;width:8px;height:8px;border-radius:50%;border:2px solid #ff4d4f;margin-right:4px;"></i>严重</span> <span>23</span>
+                                </div>
+                                <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                                    <span style="color:#666;"><i style="display:inline-block;width:8px;height:8px;border-radius:50%;border:2px solid #faad14;margin-right:4px;"></i>告警</span> <span>7</span>
+                                </div>
+                                <div style="display:flex; justify-content:space-between;">
+                                    <span style="color:#666;"><i style="display:inline-block;width:8px;height:8px;border-radius:50%;border:2px solid #1677ff;margin-right:4px;"></i>信息</span> <span>1</span>
+                                </div>
+                            `;
+                        }
+                    },
+                    legend: { data: ['总告警数'], bottom: 0, icon: 'circle' },
+                    grid: { left: '3%', right: '4%', bottom: '15%', top: '5%', containLabel: true },
+                    xAxis: {
+                        type: 'category',
+                        boundaryGap: false,
+                        data: ['03-15', '03-20', '03-25', '03-30', '04-05', '04-10', '04-15', '04-20'],
+                        axisLine: { show: false }, axisTick: { show: false }, axisLabel: { color: '#999' }
+                    },
+                    yAxis: {
+                        type: 'value',
+                        axisLabel: { formatter: '{value}%', color: '#999' },
+                        splitLine: { lineStyle: { type: 'dashed', color: '#f0f0f0' } }
+                    },
+                    series: [
+                        {
+                            name: '总告警数', type: 'line', smooth: true, symbol: 'circle', symbolSize: 6,
+                            itemStyle: { color: '#1677ff' },
+                            areaStyle: {
+                                color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                                    { offset: 0, color: 'rgba(22, 119, 255, 0.2)' },
+                                    { offset: 1, color: 'rgba(22, 119, 255, 0.0)' }
+                                ])
+                            },
+                            data: [23, 55, 38, 58, 28, 42, 29, 58]
+                        }
+                    ]
+                };
+                chart.setOption(option);
+                window.addEventListener('resize', () => { chart.resize(); });
+            },
+            initPieChart1() {
+                const chart = echarts.init(document.getElementById('pieChart1'));
+                const option = {
+                    title: {
+                        text: '235', subtext: '告警总量', left: 'center', top: 'center',
+                        textStyle: { fontSize: 28, fontWeight: 'bold', color: '#333' },
+                        subtextStyle: { fontSize: 13, color: '#666' }
+                    },
+                    tooltip: { trigger: 'item' },
+                    series: [
+                        {
+                            name: '告警级别', type: 'pie', radius: ['55%', '80%'], avoidLabelOverlap: false,
+                            label: { show: true, position: 'inner', formatter: '{b}\n{d}%', color: '#fff', fontSize: 11 },
+                            labelLine: { show: false },
+                            data: [
+                                { value: 135, name: '信息', itemStyle: { color: '#1677ff' } },
+                                { value: 60, name: '告警', itemStyle: { color: '#faad14' } },
+                                { value: 40, name: '严重', itemStyle: { color: '#ff4d4f' } }
+                            ]
+                        }
+                    ]
+                };
+                chart.setOption(option);
+                window.addEventListener('resize', () => { chart.resize(); });
+            },
+            initPieChart2() {
+                const chart = echarts.init(document.getElementById('pieChart2'));
+                const option = {
+                    tooltip: { trigger: 'item' },
+                    series: [
+                        {
+                            name: '任务分析', type: 'pie', radius: ['45%', '70%'],
+                            itemStyle: { borderRadius: 4, borderColor: '#fff', borderWidth: 2 },
+                            label: { show: true, formatter: '{b}\n{c} ({d}%)', color: '#666', fontSize: 12, lineHeight: 18 },
+                            labelLine: { length: 15, length2: 15, smooth: true },
+                            data: [
+                                { value: 40, name: '待处理', itemStyle: { color: '#ffb034' } },
+                                { value: 30, name: '处理中', itemStyle: { color: '#1d39c4' } },
+                                { value: 35, name: '已关闭', itemStyle: { color: '#a0a6b5' } }
+                            ]
+                        }
+                    ]
+                };
+                chart.setOption(option);
+                window.addEventListener('resize', () => { chart.resize(); });
+            }
+        }
+    });
+</script>
+
+</body>
+</html>
